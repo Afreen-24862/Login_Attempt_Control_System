@@ -1,0 +1,152 @@
+{% extends "layout.html" %}
+{% block title %}Register — LoginGuard{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-7 col-lg-6">
+        <div class="lacs-card auth-card p-4 p-md-5">
+          <div class="text-center mb-4">
+            <i class="fa-solid fa-user-shield text-accent display-5"></i>
+            <h3 class="fw-bold mt-2">Create Your Account</h3>
+            <p class="text-secondary small">Join LoginGuard's secure authentication platform</p>
+          </div>
+
+          <form method="POST" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+              <label class="form-label">Username</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                {{ form.username(class="form-control", id="usernameField", placeholder="Choose a username") }}
+              </div>
+              <div id="usernameFeedback" class="small mt-1"></div>
+              {% for error in form.username.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Email Address</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                {{ form.email(class="form-control", id="emailField", placeholder="you@example.com") }}
+              </div>
+              <div id="emailFeedback" class="small mt-1"></div>
+              {% for error in form.email.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Password</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                {{ form.password(class="form-control", id="passwordField", placeholder="Create a strong password") }}
+                <button class="btn btn-outline-secondary" type="button" id="togglePassword"><i class="fa-solid fa-eye"></i></button>
+              </div>
+              {% for error in form.password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+              <div class="progress strength-meter" style="height: 6px;">
+                <div id="strengthBar" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+              </div>
+              <small id="strengthLabel" class="text-secondary">Password strength</small>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Confirm Password</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                {{ form.confirm_password(class="form-control", placeholder="Re-enter your password") }}
+              </div>
+              {% for error in form.confirm_password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3 small text-secondary">
+              Password must contain: 8+ characters, uppercase, lowercase, a digit, and a special character.
+            </div>
+
+            <button type="submit" class="btn btn-accent w-100 py-2"><i class="fa-solid fa-user-plus"></i> Create Account</button>
+          </form>
+
+          <p class="text-center small text-secondary mt-4 mb-0">
+            Already have an account? <a href="{{ url_for('login') }}" class="text-accent">Login here</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const toggleBtn = document.getElementById("togglePassword");
+  const pwField = document.getElementById("passwordField");
+  toggleBtn.addEventListener("click", function () {
+    const type = pwField.getAttribute("type") === "password" ? "text" : "password";
+    pwField.setAttribute("type", type);
+    this.querySelector("i").classList.toggle("fa-eye");
+    this.querySelector("i").classList.toggle("fa-eye-slash");
+  });
+
+  // Password strength meter
+  let debounceTimer;
+  pwField.addEventListener("input", function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      const res = await fetch("{{ url_for('api_password_strength') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pwField.value })
+      });
+      const data = await res.json();
+      const bar = document.getElementById("strengthBar");
+      const label = document.getElementById("strengthLabel");
+      bar.style.width = data.score + "%";
+      label.textContent = "Password strength: " + data.label;
+      bar.className = "progress-bar";
+      if (data.score >= 80) bar.classList.add("bg-success");
+      else if (data.score >= 60) bar.classList.add("bg-info");
+      else if (data.score >= 40) bar.classList.add("bg-warning");
+      else bar.classList.add("bg-danger");
+    }, 250);
+  });
+
+  // Username availability check
+  const usernameField = document.getElementById("usernameField");
+  const usernameFeedback = document.getElementById("usernameFeedback");
+  let usernameTimer;
+  usernameField.addEventListener("input", function () {
+    clearTimeout(usernameTimer);
+    const value = usernameField.value.trim();
+    if (!value) { usernameFeedback.textContent = ""; return; }
+    usernameTimer = setTimeout(async () => {
+      const res = await fetch(`{{ url_for('api_check_username') }}?username=${encodeURIComponent(value)}`);
+      const data = await res.json();
+      usernameFeedback.innerHTML = data.available
+        ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Username available</span>'
+        : '<span class="text-danger"><i class="fa-solid fa-circle-xmark"></i> Username already taken</span>';
+    }, 300);
+  });
+
+  // Email availability check
+  const emailField = document.getElementById("emailField");
+  const emailFeedback = document.getElementById("emailFeedback");
+  let emailTimer;
+  emailField.addEventListener("input", function () {
+    clearTimeout(emailTimer);
+    const value = emailField.value.trim();
+    if (!value) { emailFeedback.textContent = ""; return; }
+    emailTimer = setTimeout(async () => {
+      const res = await fetch(`{{ url_for('api_check_email') }}?email=${encodeURIComponent(value)}`);
+      const data = await res.json();
+      emailFeedback.innerHTML = data.available
+        ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Email available</span>'
+        : '<span class="text-danger"><i class="fa-solid fa-circle-xmark"></i> Email already registered</span>';
+    }, 300);
+  });
+});
+</script>
+{% endblock %}

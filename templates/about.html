@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+{% block title %}About — LoginGuard{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+  <div class="text-center mb-5">
+    <i class="fa-solid fa-shield-halved text-accent display-4"></i>
+    <h1 class="fw-bold mt-3">About LoginGuard</h1>
+    <p class="text-secondary lead">A full-stack demonstration of brute-force protection and secure authentication engineering.</p>
+  </div>
+
+  <div class="lacs-card p-4 p-md-5 mb-4">
+    <h3 class="text-accent mb-3"><i class="fa-solid fa-circle-info"></i> Project Overview</h3>
+    <p class="text-secondary">
+      LoginGuard is a complete Login Attempt Control System built with Flask. It demonstrates how modern
+      applications defend against brute-force attacks by tracking failed authentication attempts, locking
+      accounts after repeated failures, and automatically restoring access once a cooldown period has passed.
+      The platform includes a user dashboard, an administrator control panel, interactive analytics, and
+      exportable audit reports — all wrapped in a polished, responsive cybersecurity-themed interface.
+    </p>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <div class="lacs-card p-4 h-100">
+        <h4 class="text-accent mb-3"><i class="fa-solid fa-list-check"></i> Key Features</h4>
+        <ul class="security-tips list-unstyled">
+          <li><i class="fa-solid fa-check text-success"></i> Secure registration &amp; login</li>
+          <li><i class="fa-solid fa-check text-success"></i> Account lockout after repeated failures</li>
+          <li><i class="fa-solid fa-check text-success"></i> Automatic unlock timer</li>
+          <li><i class="fa-solid fa-check text-success"></i> Role-based access (user / admin)</li>
+          <li><i class="fa-solid fa-check text-success"></i> Real-time analytics dashboards</li>
+          <li><i class="fa-solid fa-check text-success"></i> CSV / PDF exportable reports</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="lacs-card p-4 h-100">
+        <h4 class="text-accent mb-3"><i class="fa-solid fa-shield-halved"></i> Security Features</h4>
+        <ul class="security-tips list-unstyled">
+          <li><i class="fa-solid fa-check text-success"></i> Salted, hashed password storage</li>
+          <li><i class="fa-solid fa-check text-success"></i> CSRF protection on all forms</li>
+          <li><i class="fa-solid fa-check text-success"></i> Parameterized SQL (no injection)</li>
+          <li><i class="fa-solid fa-check text-success"></i> Secure, HTTP-only session cookies</li>
+          <li><i class="fa-solid fa-check text-success"></i> Rate limiting on login attempts</li>
+          <li><i class="fa-solid fa-check text-success"></i> Structured security audit logging</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="lacs-card p-4 p-md-5 mb-4">
+    <h3 class="text-accent mb-4"><i class="fa-solid fa-diagram-project"></i> Authentication Workflow</h3>
+    <div class="workflow-steps">
+      <div class="workflow-step"><span class="step-num">1</span> User submits login credentials</div>
+      <div class="workflow-step"><span class="step-num">2</span> System checks if account is currently locked</div>
+      <div class="workflow-step"><span class="step-num">3</span> Password verified against hashed value</div>
+      <div class="workflow-step"><span class="step-num">4</span> Failure increments counter; 5 failures triggers lockout</div>
+      <div class="workflow-step"><span class="step-num">5</span> Lockout auto-expires after the cooldown window</div>
+      <div class="workflow-step"><span class="step-num">6</span> Success resets counter and starts a secure session</div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <div class="lacs-card p-4 h-100">
+        <h4 class="text-accent mb-3"><i class="fa-solid fa-layer-group"></i> Technology Stack</h4>
+        <p class="small text-secondary mb-1"><strong>Backend:</strong> Python 3.12, Flask, Flask-Login, Flask-WTF</p>
+        <p class="small text-secondary mb-1"><strong>Frontend:</strong> HTML5, CSS3, Bootstrap 5, JavaScript</p>
+        <p class="small text-secondary mb-1"><strong>Database:</strong> SQLite</p>
+        <p class="small text-secondary mb-0"><strong>Analytics:</strong> Plotly, pandas</p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="lacs-card p-4 h-100">
+        <h4 class="text-accent mb-3"><i class="fa-solid fa-rocket"></i> Future Enhancements</h4>
+        <ul class="security-tips list-unstyled">
+          <li><i class="fa-solid fa-arrow-right text-accent"></i> Two-factor authentication (TOTP)</li>
+          <li><i class="fa-solid fa-arrow-right text-accent"></i> Email-based password reset</li>
+          <li><i class="fa-solid fa-arrow-right text-accent"></i> IP geolocation &amp; anomaly detection</li>
+          <li><i class="fa-solid fa-arrow-right text-accent"></i> OAuth / SSO integration</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="lacs-card p-4 p-md-5 text-center">
+    <h4 class="text-accent mb-2"><i class="fa-solid fa-code"></i> Developer Information</h4>
+    <p class="text-secondary mb-0">Built as an educational and portfolio project demonstrating full-stack development and applied cybersecurity engineering practices.</p>
+  </div>
+</section>
+{% endblock %}

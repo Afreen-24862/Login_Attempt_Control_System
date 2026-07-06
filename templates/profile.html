@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+{% block title %}Profile — LoginGuard{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+  <h2 class="fw-bold mb-4"><i class="fa-solid fa-user text-accent"></i> My Profile</h2>
+
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="lacs-card p-4 text-center mb-4">
+        <div class="profile-avatar mx-auto mb-3">
+          <i class="fa-solid fa-user-astronaut"></i>
+        </div>
+        <h4>{{ user.username }}</h4>
+        <p class="text-secondary small">{{ user.email }}</p>
+        <span class="badge {{ 'text-bg-warning' if user.is_admin else 'text-bg-secondary' }}">{{ user.role | capitalize }}</span>
+        <hr class="border-secondary my-3">
+        <p class="small text-secondary mb-1"><i class="fa-solid fa-calendar"></i> Joined {{ user.registration_date }}</p>
+        <p class="small text-secondary mb-0"><i class="fa-solid fa-fingerprint"></i> {{ user.uuid }}</p>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="lacs-card p-4 mb-4">
+        <h5 class="mb-3"><i class="fa-solid fa-key text-accent"></i> Change Password</h5>
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            <label class="form-label">Current Password</label>
+            {{ form.current_password(class="form-control") }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">New Password</label>
+            {{ form.new_password(class="form-control") }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Confirm New Password</label>
+            {{ form.confirm_new_password(class="form-control") }}
+          </div>
+          <button type="submit" class="btn btn-accent"><i class="fa-solid fa-floppy-disk"></i> Update Password</button>
+        </form>
+      </div>
+
+      <div class="lacs-card p-4">
+        <h5 class="mb-3"><i class="fa-solid fa-clock-rotate-left text-accent"></i> Recent Activity</h5>
+        <ul class="list-group list-group-flush">
+          {% for h in history %}
+          <li class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between small">
+            <span>{{ h.login_time }} — {{ h.ip_address }}</span>
+            {% if h.login_status == 'success' %}
+              <span class="badge text-bg-success">Success</span>
+            {% else %}
+              <span class="badge text-bg-danger">Failed</span>
+            {% endif %}
+          </li>
+          {% else %}
+          <li class="list-group-item bg-transparent text-secondary border-secondary">No activity recorded.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

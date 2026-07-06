@@ -1,0 +1,142 @@
+{% extends "layout.html" %}
+{% block title %}LoginGuard — Secure Authentication Platform{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+  <div class="container py-5">
+    <div class="row align-items-center gy-4">
+      <div class="col-lg-7">
+        <span class="badge badge-accent mb-3"><i class="fa-solid fa-lock"></i> Brute-Force Protection Demo</span>
+        <h1 class="display-4 fw-bold mb-3">Stop Brute-Force Attacks <span class="text-accent">Before They Start</span></h1>
+        <p class="lead text-secondary mb-4">
+          LoginGuard is a full-stack cybersecurity platform demonstrating account lockout,
+          failed-attempt tracking, secure session management, and real-time security analytics.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{{ url_for('register') }}" class="btn btn-accent btn-lg px-4"><i class="fa-solid fa-rocket"></i> Get Started</a>
+          <a href="{{ url_for('about') }}" class="btn btn-outline-light btn-lg px-4"><i class="fa-solid fa-book"></i> Learn More</a>
+        </div>
+      </div>
+      <div class="col-lg-5 text-center">
+        <div class="hero-graphic">
+          <i class="fa-solid fa-shield-halved hero-icon"></i>
+          <div class="pulse-ring"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container py-5">
+  <div class="row text-center gy-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-number" data-count="{{ stats.total_users }}">0</div>
+        <div class="stat-label">Registered Users</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-number" data-count="{{ stats.successful_logins }}">0</div>
+        <div class="stat-label">Successful Logins</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-number" data-count="{{ stats.failed_logins }}">0</div>
+        <div class="stat-label">Blocked Attempts</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-number" data-count="{{ stats.locked_users }}">0</div>
+        <div class="stat-label">Locked Accounts</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container py-5">
+  <h2 class="text-center fw-bold mb-5">Core Security Features</h2>
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="feature-card">
+        <i class="fa-solid fa-user-lock feature-icon"></i>
+        <h5>Account Lockout</h5>
+        <p class="text-secondary small">Accounts automatically lock after 5 failed login attempts, with a configurable cooldown timer.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <i class="fa-solid fa-key feature-icon"></i>
+        <h5>Password Hashing</h5>
+        <p class="text-secondary small">All passwords are salted and hashed using industry-standard adaptive hashing — never stored in plaintext.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <i class="fa-solid fa-chart-line feature-icon"></i>
+        <h5>Security Analytics</h5>
+        <p class="text-secondary small">Real-time dashboards visualize login trends, suspicious activity, and account health.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <i class="fa-solid fa-clock-rotate-left feature-icon"></i>
+        <h5>Session Management</h5>
+        <p class="text-secondary small">Sessions expire automatically after inactivity, with secure, signed, HTTP-only cookies.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <i class="fa-solid fa-file-shield feature-icon"></i>
+        <h5>Audit Logging</h5>
+        <p class="text-secondary small">Every authentication event is recorded for full accountability and forensic review.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <i class="fa-solid fa-gauge feature-icon"></i>
+        <h5>Rate Limiting</h5>
+        <p class="text-secondary small">Repeated login requests from the same source are throttled to blunt automated attacks.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">Recent Login Activity</h2>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('reports') }}" class="btn btn-sm btn-outline-light">View All Reports</a>
+    {% endif %}
+  </div>
+  <div class="table-responsive lacs-card p-3">
+    <table class="table table-dark table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Username</th><th>Time</th><th>IP Address</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in recent_logs %}
+        <tr>
+          <td>{{ log.username }}</td>
+          <td class="small text-secondary">{{ log.login_time }}</td>
+          <td class="small text-secondary">{{ log.ip_address }}</td>
+          <td>
+            {% if log.login_status == 'success' %}
+              <span class="badge text-bg-success">Success</span>
+            {% else %}
+              <span class="badge text-bg-danger">Failed</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-center text-secondary py-4">No login activity yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+{% block title %}Reports — LoginGuard{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+  <h2 class="fw-bold mb-1"><i class="fa-solid fa-file-lines text-accent"></i> Login Reports</h2>
+  <p class="text-secondary mb-4">Search, filter, and export login history records.</p>
+
+  <div class="lacs-card p-3 p-md-4 mb-4">
+    <form method="GET" class="row g-3 align-items-end">
+      {% if current_user.is_admin %}
+      <div class="col-md-3">
+        <label class="form-label small">Username</label>
+        <input type="text" name="username" value="{{ username_filter }}" class="form-control" placeholder="Search username">
+      </div>
+      {% endif %}
+      <div class="col-md-3">
+        <label class="form-label small">Status</label>
+        <select name="status" class="form-select">
+          <option value="" {{ 'selected' if not status_filter }}>All</option>
+          <option value="success" {{ 'selected' if status_filter == 'success' }}>Success</option>
+          <option value="failed" {{ 'selected' if status_filter == 'failed' }}>Failed</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small">Start Date</label>
+        <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small">End Date</label>
+        <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+      </div>
+      <div class="col-12">
+        <button type="submit" class="btn btn-accent"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+        <a href="{{ url_for('reports') }}" class="btn btn-outline-secondary">Clear</a>
+        <a href="{{ url_for('export_csv', username=username_filter) }}" class="btn btn-outline-success"><i class="fa-solid fa-file-csv"></i> Export CSV</a>
+        <a href="{{ url_for('export_pdf', username=username_filter) }}" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf"></i> Export PDF</a>
+        {% if current_user.is_admin %}
+        <form method="POST" action="{{ url_for('delete_logs_all') }}" class="d-inline" onsubmit="return confirm('Delete ALL log records? This cannot be undone.');">
+          <button type="submit" class="btn btn-outline-danger"><i class="fa-solid fa-trash"></i> Delete All Logs</button>
+        </form>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <div class="lacs-card p-3 p-md-4">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>ID</th><th>Username</th><th>Time</th><th>IP Address</th><th>Browser</th><th>Status</th><th>Reason</th>
+            {% if current_user.is_admin %}<th>Actions</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td>{{ log.id }}</td>
+            <td>{{ log.username }}</td>
+            <td class="small text-secondary">{{ log.login_time }}</td>
+            <td class="small text-secondary">{{ log.ip_address }}</td>
+            <td class="small text-secondary">{{ log.browser }}</td>
+            <td>
+              {% if log.login_status == 'success' %}
+                <span class="badge text-bg-success">Success</span>
+              {% else %}
+                <span class="badge text-bg-danger">Failed</span>
+              {% endif %}
+            </td>
+            <td class="small text-secondary">{{ log.failure_reason or '-' }}</td>
+            {% if current_user.is_admin %}
+            <td>
+              <form method="POST" action="{{ url_for('delete_single_log', log_id=log.id) }}" onsubmit="return confirm('Delete this log entry?');">
+                <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+              </form>
+            </td>
+            {% endif %}
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center text-secondary py-4">No records match your filters.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

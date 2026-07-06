@@ -1,0 +1,148 @@
+{% extends "layout.html" %}
+{% block title %}Login — LoginGuard{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="lacs-card auth-card p-4 p-md-5">
+          <div class="text-center mb-4">
+            <i class="fa-solid fa-shield-halved text-accent display-5"></i>
+            <h3 class="fw-bold mt-2">Welcome Back</h3>
+            <p class="text-secondary small">Sign in to your secure account</p>
+          </div>
+
+          {% if lock_seconds_remaining and lock_seconds_remaining > 0 %}
+          <div class="alert alert-danger d-flex align-items-center gap-2" id="lockAlert">
+            <i class="fa-solid fa-lock"></i>
+            <div>Account locked. Unlocks in <strong id="countdown">{{ lock_seconds_remaining }}</strong> seconds.</div>
+          </div>
+          {% elif remaining_attempts is not none %}
+          <div class="alert alert-warning d-flex align-items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div><strong>{{ remaining_attempts }}</strong> of {{ max_attempts }} attempts remaining before lockout.</div>
+          </div>
+          {% endif %}
+
+          <form method="POST" id="loginForm" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+              <label class="form-label">Username</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                {{ form.username(class="form-control", placeholder="Enter your username", autofocus=true) }}
+              </div>
+              {% for error in form.username.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Password</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                {{ form.password(class="form-control", placeholder="Enter your password", id="passwordField") }}
+                <button class="btn btn-outline-secondary" type="button" id="togglePassword"><i class="fa-solid fa-eye"></i></button>
+              </div>
+              {% for error in form.password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="form-check">
+                {{ form.remember(class="form-check-input") }}
+                <label class="form-check-label small" for="remember">Remember Me</label>
+              </div>
+              <a href="#" class="small text-accent" data-bs-toggle="modal" data-bs-target="#forgotModal">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-accent w-100 py-2" id="loginSubmitBtn">
+              <span id="loginBtnText"><i class="fa-solid fa-right-to-bracket"></i> Login</span>
+              <span id="loginSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+            </button>
+          </form>
+
+          <p class="text-center small text-secondary mt-4 mb-0">
+            Don't have an account? <a href="{{ url_for('register') }}" class="text-accent">Register here</a>
+          </p>
+          <p class="text-center small text-secondary mt-2 mb-0">
+            <i class="fa-solid fa-circle-info"></i> Default admin: <code>admin</code> / <code>Admin@12345</code>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Forgot Password Modal (UI only) -->
+<div class="modal fade" id="forgotModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content lacs-card">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title"><i class="fa-solid fa-key"></i> Reset Password</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small">Enter your registered email and we'll send you reset instructions.</p>
+        <input type="email" class="form-control" placeholder="you@example.com">
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-accent" onclick="showResetToast()">Send Reset Link</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Password visibility toggle
+    const toggleBtn = document.getElementById("togglePassword");
+    const pwField = document.getElementById("passwordField");
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", function () {
+        const type = pwField.getAttribute("type") === "password" ? "text" : "password";
+        pwField.setAttribute("type", type);
+        this.querySelector("i").classList.toggle("fa-eye");
+        this.querySelector("i").classList.toggle("fa-eye-slash");
+      });
+    }
+
+    // Loading spinner on submit
+    const form = document.getElementById("loginForm");
+    if (form) {
+      form.addEventListener("submit", function () {
+        document.getElementById("loginBtnText").classList.add("d-none");
+        document.getElementById("loginSpinner").classList.remove("d-none");
+      });
+    }
+
+    // Lockout countdown timer
+    const countdownEl = document.getElementById("countdown");
+    if (countdownEl) {
+      let remaining = parseInt(countdownEl.textContent, 10);
+      const interval = setInterval(() => {
+        remaining -= 1;
+        if (remaining <= 0) {
+          clearInterval(interval);
+          document.getElementById("lockAlert").innerHTML =
+            '<i class="fa-solid fa-circle-check"></i> Account unlocked. You may try logging in again.';
+          document.getElementById("lockAlert").classList.remove("alert-danger");
+          document.getElementById("lockAlert").classList.add("alert-success");
+        } else {
+          countdownEl.textContent = remaining;
+        }
+      }, 1000);
+    }
+  });
+
+  function showResetToast() {
+    bootstrap.Modal.getInstance(document.getElementById('forgotModal')).hide();
+    const toast = document.createElement('div');
+    toast.className = 'toast align-items-center text-bg-info border-0 show position-fixed top-0 end-0 m-3';
+    toast.style.zIndex = 1090;
+    toast.innerHTML = '<div class="d-flex"><div class="toast-body"><i class="fa-solid fa-paper-plane"></i> Reset link sent (demo only).</div></div>';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  }
+</script>
+{% endblock %}

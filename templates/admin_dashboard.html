@@ -1,0 +1,175 @@
+{% extends "layout.html" %}
+{% block title %}Admin Dashboard — LoginGuard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.30.0/plotly.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+  <h2 class="fw-bold mb-1"><i class="fa-solid fa-user-shield text-accent"></i> Admin Dashboard</h2>
+  <p class="text-secondary mb-4">Real-time security monitoring and user management.</p>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-3 col-6"><div class="stat-card"><div class="stat-number" data-count="{{ stats.total_users }}">0</div><div class="stat-label">Total Users</div></div></div>
+    <div class="col-md-3 col-6"><div class="stat-card"><div class="stat-number" data-count="{{ stats.active_users }}">0</div><div class="stat-label">Active Users</div></div></div>
+    <div class="col-md-3 col-6"><div class="stat-card"><div class="stat-number" data-count="{{ stats.locked_users }}">0</div><div class="stat-label">Locked Accounts</div></div></div>
+    <div class="col-md-3 col-6"><div class="stat-card"><div class="stat-number">{{ stats.success_rate }}%</div><div class="stat-label">Success Rate</div></div></div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-lg-4"><div class="lacs-card p-3"><div id="pieChart"></div></div></div>
+    <div class="col-lg-4"><div class="lacs-card p-3"><div id="gaugeChart"></div></div></div>
+    <div class="col-lg-4"><div class="lacs-card p-3"><div id="barChart"></div></div></div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-lg-8"><div class="lacs-card p-3"><div id="timelineChart"></div></div></div>
+    <div class="col-lg-4"><div class="lacs-card p-3"><div id="heatmapChart"></div></div></div>
+  </div>
+
+  <div class="lacs-card p-3 p-md-4 mb-4">
+    <h5 class="mb-3"><i class="fa-solid fa-users text-accent"></i> User Management</h5>
+    <div class="table-responsive">
+      <table class="table table-dark table-hover align-middle mb-0">
+        <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Failed</th><th>Registered</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>{{ u.username }}</td>
+            <td class="small text-secondary">{{ u.email }}</td>
+            <td><span class="badge {{ 'text-bg-warning' if u.role == 'admin' else 'text-bg-secondary' }}">{{ u.role }}</span></td>
+            <td>
+              {% if u.account_status == 'active' %}
+                <span class="badge text-bg-success">Active</span>
+              {% else %}
+                <span class="badge text-bg-danger">Locked</span>
+              {% endif %}
+            </td>
+            <td>{{ u.failed_attempts }}</td>
+            <td class="small text-secondary">{{ u.registration_date }}</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                {% if u.account_status == 'locked' %}
+                <form method="POST" action="{{ url_for('admin_unlock', user_id=u.id) }}">
+                  <button class="btn btn-sm btn-outline-success" title="Unlock"><i class="fa-solid fa-lock-open"></i></button>
+                </form>
+                {% else %}
+                <form method="POST" action="{{ url_for('admin_lock', user_id=u.id) }}">
+                  <button class="btn btn-sm btn-outline-warning" title="Lock"><i class="fa-solid fa-lock"></i></button>
+                </form>
+                {% endif %}
+                <form method="POST" action="{{ url_for('admin_reset', user_id=u.id) }}">
+                  <button class="btn btn-sm btn-outline-info" title="Reset Attempts"><i class="fa-solid fa-rotate-left"></i></button>
+                </form>
+                <form method="POST" action="{{ url_for('admin_delete', user_id=u.id) }}" onsubmit="return confirm('Delete this user permanently?');">
+                  <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="lacs-card p-3 p-md-4">
+        <h5 class="mb-3"><i class="fa-solid fa-ranking-star text-accent"></i> Top Failed Login Users</h5>
+        <ul class="list-group list-group-flush">
+          {% for row in stats.top_failed_users %}
+          <li class="list-group-item bg-transparent text-light d-flex justify-content-between border-secondary">
+            <span>{{ row.username }}</span><span class="badge text-bg-danger">{{ row.failures }}</span>
+          </li>
+          {% else %}
+          <li class="list-group-item bg-transparent text-secondary border-secondary">No failed logins recorded.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="lacs-card p-3 p-md-4">
+        <h5 class="mb-3"><i class="fa-solid fa-bell text-accent"></i> Recent Security Alerts</h5>
+        <ul class="list-group list-group-flush">
+          {% for log in recent_logs %}
+            {% if log.login_status == 'failed' %}
+            <li class="list-group-item bg-transparent text-light border-secondary small">
+              <i class="fa-solid fa-triangle-exclamation text-warning"></i>
+              {{ log.username }} — {{ log.failure_reason }} from {{ log.ip_address }} at {{ log.login_time }}
+            </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function loadCharts() {
+  const res = await fetch("{{ url_for('chart_data') }}");
+  const data = await res.json();
+
+  const layoutBase = {
+    paper_bgcolor: "rgba(0,0,0,0)",
+    plot_bgcolor: "rgba(0,0,0,0)",
+    font: { color: "#e6edf3", family: "Space Grotesk, sans-serif" },
+    margin: { t: 40, l: 40, r: 20, b: 40 }
+  };
+
+  Plotly.newPlot("pieChart", [{
+    labels: data.pie.labels,
+    values: data.pie.values,
+    type: "pie",
+    hole: 0.5,
+    marker: { colors: ["#00e5a0", "#ff4d6d"] }
+  }], { ...layoutBase, title: "Successful vs Failed Logins" }, { responsive: true });
+
+  Plotly.newPlot("gaugeChart", [{
+    type: "indicator",
+    mode: "gauge+number",
+    value: data.success_rate,
+    title: { text: "Login Success Rate (%)" },
+    gauge: {
+      axis: { range: [0, 100] },
+      bar: { color: "#00e5a0" },
+      steps: [
+        { range: [0, 50], color: "#4a1d2f" },
+        { range: [50, 80], color: "#4a3d1d" },
+        { range: [80, 100], color: "#1d4a35" }
+      ]
+    }
+  }], layoutBase, { responsive: true });
+
+  const topUsers = data.top_failed_users || [];
+  Plotly.newPlot("barChart", [{
+    x: topUsers.map(u => u.username),
+    y: topUsers.map(u => u.failures),
+    type: "bar",
+    marker: { color: "#ff9f1c" }
+  }], { ...layoutBase, title: "Top Failed Login Users" }, { responsive: true });
+
+  Plotly.newPlot("timelineChart", [{
+    x: data.daily_labels,
+    y: data.daily_values,
+    type: "scatter",
+    mode: "lines+markers",
+    fill: "tozeroy",
+    line: { color: "#00e5a0" }
+  }], { ...layoutBase, title: "Login Activity Timeline" }, { responsive: true });
+
+  Plotly.newPlot("heatmapChart", [{
+    z: [data.heatmap_hours],
+    x: Array.from({length: 24}, (_, i) => i + ":00"),
+    y: ["Failed Logins"],
+    type: "heatmap",
+    colorscale: "Reds"
+  }], { ...layoutBase, title: "Failed Login Heatmap (by Hour)" }, { responsive: true });
+}
+document.addEventListener("DOMContentLoaded", loadCharts);
+</script>
+{% endblock %}

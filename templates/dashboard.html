@@ -1,0 +1,103 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard — LoginGuard{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold mb-1"><i class="fa-solid fa-gauge-high text-accent"></i> Welcome, {{ user.username }}</h2>
+      <p class="text-secondary mb-0">Here's your account activity overview.</p>
+    </div>
+    <span class="badge {{ 'text-bg-success' if user.account_status == 'active' else 'text-bg-danger' }} fs-6">
+      <i class="fa-solid fa-circle"></i> {{ user.account_status | capitalize }}
+    </span>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-3 col-6">
+      <div class="mini-stat-card">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <div>
+          <div class="small text-secondary">Last Successful Login</div>
+          <div class="fw-semibold">{{ user.last_login_success or "Never" }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="mini-stat-card">
+        <i class="fa-solid fa-triangle-exclamation text-warning"></i>
+        <div>
+          <div class="small text-secondary">Last Failed Login</div>
+          <div class="fw-semibold">{{ user.last_login_failed or "None" }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="mini-stat-card">
+        <i class="fa-solid fa-hashtag"></i>
+        <div>
+          <div class="small text-secondary">Failed Attempts</div>
+          <div class="fw-semibold">{{ user.failed_attempts }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="mini-stat-card">
+        <i class="fa-solid fa-id-badge"></i>
+        <div>
+          <div class="small text-secondary">Role</div>
+          <div class="fw-semibold">{{ user.role | capitalize }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="lacs-card p-3 p-md-4 mb-4">
+        <h5 class="mb-3"><i class="fa-solid fa-clock-rotate-left text-accent"></i> Recent Login History</h5>
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle mb-0">
+            <thead><tr><th>Time</th><th>IP Address</th><th>Browser</th><th>Status</th></tr></thead>
+            <tbody>
+              {% for h in history %}
+              <tr>
+                <td class="small">{{ h.login_time }}</td>
+                <td class="small text-secondary">{{ h.ip_address }}</td>
+                <td class="small text-secondary">{{ h.browser }}</td>
+                <td>
+                  {% if h.login_status == 'success' %}
+                    <span class="badge text-bg-success">Success</span>
+                  {% else %}
+                    <span class="badge text-bg-danger" title="{{ h.failure_reason }}">Failed</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="4" class="text-center text-secondary py-3">No history yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="lacs-card p-3 p-md-4 mb-4">
+        <h5 class="mb-3"><i class="fa-solid fa-lightbulb text-accent"></i> Security Recommendations</h5>
+        <ul class="list-unstyled security-tips">
+          <li><i class="fa-solid fa-check text-success"></i> Use a unique password for this account.</li>
+          <li><i class="fa-solid fa-check text-success"></i> Enable a password manager for stronger credentials.</li>
+          <li><i class="fa-solid fa-check text-success"></i> Review your login history regularly for anomalies.</li>
+          <li><i class="fa-solid fa-check text-success"></i> Log out of shared or public devices.</li>
+        </ul>
+      </div>
+      <div class="lacs-card p-3 p-md-4">
+        <h5 class="mb-3"><i class="fa-solid fa-desktop text-accent"></i> Active Session</h5>
+        <p class="small text-secondary mb-1"><i class="fa-solid fa-user"></i> {{ user.username }}</p>
+        <p class="small text-secondary mb-1"><i class="fa-solid fa-id-card"></i> {{ user.uuid }}</p>
+        <p class="small text-secondary mb-0"><i class="fa-solid fa-calendar"></i> Member since {{ user.registration_date }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
